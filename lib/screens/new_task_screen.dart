@@ -3,7 +3,7 @@ import 'package:flutter_todo/models/todo.dart';
 
 class NewTaskScreen extends StatefulWidget {
   final Todo? item;
-  const NewTaskScreen(this.item);
+  const NewTaskScreen({this.item});
   static const routeName = '/newTask';
 
   @override
@@ -15,8 +15,10 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
 
   @override
   void initState() {
-    titleController = new TextEditingController(
-        text: widget.item != null ? widget.item!.title : null);
+    // To set the incoming title of the todo task item
+    if (widget.item != null)
+      titleController = new TextEditingController(text: widget.item!.title);
+
     super.initState();
   }
 
@@ -28,7 +30,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('New Tasks'),
+        title: Text('Save Tasks'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -38,9 +40,12 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
             TextField(
                 controller: titleController,
                 style: TextStyle(fontSize: 20),
-                decoration: InputDecoration(labelText: 'Add a new task')),
+                decoration: InputDecoration(labelText: 'Save a task')),
             ElevatedButton(
-              child: Text('Add'),
+              child: Container(
+                  width: double.infinity,
+                  height: 60,
+                  child: Center(child: Text('Save'))),
               onPressed: () => submit(),
             )
           ],

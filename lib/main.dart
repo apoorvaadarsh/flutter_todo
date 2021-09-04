@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_todo/models/todo.dart';
 import 'package:flutter_todo/screens/homescreen.dart';
-import 'package:flutter_todo/screens/new_task_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,10 +16,6 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.teal,
       ),
       home: HomeScreen(),
-      routes: {
-        NewTaskScreen.routeName: (context) =>
-            NewTaskScreen(Todo(title: "eg 1", isCompleted: true)),
-      },
     );
   }
 }

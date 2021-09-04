@@ -3,72 +3,112 @@ import 'package:flutter_todo/models/todo.dart';
 import 'package:flutter_todo/screens/new_task_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Todo> list = [];
-  List<Todo> tList = [];
 
-  void editTodo(Todo item) async {
+  //----------------------------------------------------------------------------
+
+  void goToNewItemView() async {
+    // Here we are pushing the new view into the Navigator stack. By using a
+    // MaterialPageRoute we get standard behaviour of a Material app, which will
+    // show a back button automatically for each platform on the left top corner
+    MaterialPageRoute newItemView =
+        MaterialPageRoute(builder: (context) => NewTaskScreen());
+
+    dynamic result = await Navigator.of(context).push(newItemView);
+
+    if (result != null) addItem(Todo(title: result.toString()));
+  }
+
+  void goToEditItemView(item) async {
+    // We re-use the NewTodoView and push it to the Navigator stack just like
+    // before, but now we send the title of the item on the class constructor
+    // and expect a new title to be returned so that we can edit the item
+
     MaterialPageRoute editItemView =
-        MaterialPageRoute(builder: (context) => NewTaskScreen(item));
+        MaterialPageRoute(builder: (context) => NewTaskScreen(item: item));
 
     dynamic result = await Navigator.of(context).push(editItemView);
-    item.title = result.toString();
-    setState(() {});
+
+    if (result != null)
+      setState(() {
+        editItem(item, result.toString());
+      });
   }
 
-  void deleteTodo(Todo item) {
-    tList.remove(item);
+  //----------------------------------------------------------------------------
+
+  void addItem(Todo item) async {
+    setState(() {
+      list.add(item);
+    });
   }
 
-  void changeDoneness(Todo item) {
+  void editItem(Todo item, String title) async {
+    item.title = title;
+  }
+
+  void removeItem(Todo item) async {
+    setState(() {
+      list.remove(item);
+    });
+  }
+
+  void markAsDone(Todo item) async {
     setState(() {
       item.isCompleted = !item.isCompleted;
     });
   }
 
-  Widget dismissibleItem(Todo item, int index) {
-    return Dismissible(
-        background: Container(
-            color: Colors.red,
-            padding: EdgeInsets.all(10.0),
-            child: Icon(Icons.delete)),
-        key: Key('1'),
-        child: ListTile(
-          onLongPress: () => editTodo(item),
-          onTap: () => changeDoneness(item),
-          title: Text(item.title.toString()),
-          trailing: Icon(item.isCompleted
-              ? Icons.check_box
-              : Icons.check_box_outline_blank),
-        ));
-  }
+  //----------------------------------------------------------------------------
 
-  Widget buildMyList() {
+  Widget buildListView() {
     return ListView.builder(
       shrinkWrap: true,
-      itemCount: tList.length,
+      itemCount: list.length,
       itemBuilder: (BuildContext context, int index) =>
-          dismissibleItem(tList[index], index),
+          buildItem(list[index], index),
     );
   }
 
-  Widget buildView() {
-    return Column(children: [buildMyList()]);
+  Widget buildItem(Todo item, index) {
+    return Dismissible(
+      key: Key('${item.hashCode}'),
+      background: Container(
+        padding: EdgeInsets.all(5),
+        color: Colors.red[700],
+        child: Icon(
+          Icons.delete,
+          color: Colors.white,
+        ),
+        alignment: Alignment.centerLeft,
+      ),
+      onDismissed: (direction) => removeItem(item),
+      direction: DismissDirection.startToEnd,
+      child: buildListItem(item, index),
+    );
   }
 
-  void addingATask() async {
-    dynamic result =
-        await Navigator.of(context).pushNamed(NewTaskScreen.routeName);
-
-    tList.add(Todo(title: result, isCompleted: false));
-    setState(() {});
+  Widget buildListItem(Todo item, int index) {
+    return ListTile(
+      onTap: () => markAsDone(item),
+      onLongPress: () => goToEditItemView(item),
+      leading: Text((index + 1).toString()),
+      title: Text(
+        item.title!,
+        key: Key('item-$index'),
+      ),
+      trailing: Icon(
+        item.isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
+        key: Key('completed-icon-$index'),
+      ),
+    );
   }
+  //----------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -76,11 +116,16 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text('Todo Tasks'),
       ),
-      body: buildView(),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: buildListView(),
+      ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: addingATask,
+        onPressed: () => goToNewItemView(),
       ),
     );
   }
+  //----------------------------------------------------------------------------
+
 }
