@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_todo/models/todo.dart';
 import 'package:flutter_todo/screens/new_task_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -9,6 +11,29 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Todo> list = [];
+  SharedPreferences? sharedPreferences;
+
+  @override
+  void initState(){
+    loadData();
+    super.initState();
+  }
+
+  void loadData() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    List<String>? listString = sharedPreferences!.getStringList('list');
+    if(listString!=null){
+      setState(() {
+        list = listString.map((item) => Todo.fromMap(json.decode(item))).toList();
+      });
+    }
+  }
+
+  Future saveData() async {
+    List<String> stringList = list.map((item) => json.encode(item.toMap())).toList();
+    await sharedPreferences!.setStringList('list', stringList);
+    setState(() {});
+  }
 
   //----------------------------------------------------------------------------
 
@@ -44,24 +69,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void addItem(Todo item) async {
     setState(() {
-      list.add(item);
+      list.insert(0,item);
     });
+    await saveData();
   }
 
   void editItem(Todo item, String title) async {
     item.title = title;
+    await saveData();
   }
 
   void removeItem(Todo item) async {
     setState(() {
       list.remove(item);
     });
+    await saveData();
   }
 
   void markAsDone(Todo item) async {
     setState(() {
       item.isCompleted = !item.isCompleted;
     });
+    await saveData();
   }
 
   //----------------------------------------------------------------------------
@@ -101,6 +130,9 @@ class _HomeScreenState extends State<HomeScreen> {
       title: Text(
         item.title!,
         key: Key('item-$index'),
+        style: TextStyle(
+          decoration: item.isCompleted ? TextDecoration.lineThrough : null,
+        ),
       ),
       trailing: Icon(
         item.isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
