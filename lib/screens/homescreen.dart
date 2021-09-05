@@ -118,12 +118,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   //----------------------------------------------------------------------------
 
+  Widget emptyWidget() {
+    return Center(
+      child: Text('No items yet'),
+    );
+  }
+
   Widget buildListView() {
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: list.length,
-      itemBuilder: (BuildContext context, int index) =>
-          buildItem(list[index], index),
+    return Column(
+      children: [
+        if (isLoading) LinearProgressIndicator(),
+        ListView.builder(
+          shrinkWrap: true,
+          itemCount: list.length,
+          itemBuilder: (BuildContext context, int index) =>
+              buildItem(list[index], index),
+        ),
+      ],
     );
   }
 
@@ -178,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: buildListView(),
+        child: list.isEmpty ? emptyWidget() : buildListView(),
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
@@ -186,6 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
   //----------------------------------------------------------------------------
 
 }

@@ -3,6 +3,7 @@ import 'package:flutter_todo/screens/homescreen.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(MyApp());
 }
