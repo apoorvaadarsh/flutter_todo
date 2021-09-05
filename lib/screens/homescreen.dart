@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_todo/models/todo.dart';
 import 'package:flutter_todo/screens/new_task_screen.dart';
+import 'package:flutter_todo/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -13,8 +14,10 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Todo> list = [];
   SharedPreferences? sharedPreferences;
 
+  bool isLoading = false;
+
   @override
-  void initState(){
+  void initState() {
     loadData();
     super.initState();
   }
@@ -22,15 +25,17 @@ class _HomeScreenState extends State<HomeScreen> {
   void loadData() async {
     sharedPreferences = await SharedPreferences.getInstance();
     List<String>? listString = sharedPreferences!.getStringList('list');
-    if(listString!=null){
+    if (listString != null) {
       setState(() {
-        list = listString.map((item) => Todo.fromMap(json.decode(item))).toList();
+        list =
+            listString.map((item) => Todo.fromMap(json.decode(item))).toList();
       });
     }
   }
 
   Future saveData() async {
-    List<String> stringList = list.map((item) => json.encode(item.toMap())).toList();
+    List<String> stringList =
+        list.map((item) => json.encode(item.toMap())).toList();
     await sharedPreferences!.setStringList('list', stringList);
     setState(() {});
   }
@@ -69,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void addItem(Todo item) async {
     setState(() {
-      list.insert(0,item);
+      list.insert(0, item);
     });
     await saveData();
   }
@@ -92,7 +97,25 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     await saveData();
   }
+  //----------------------------------------------------------------------------
 
+  void switchLoadingState() {
+    setState(() {
+      isLoading = !isLoading;
+    });
+  }
+
+  void getTodosFromDatabase() async {
+    switchLoadingState();
+    list = await Database().getTodoToDatabase();
+    switchLoadingState();
+  }
+
+  void addTodosToDatabase() async {
+    switchLoadingState();
+    await Database().addTodoToDatabase(list);
+    switchLoadingState();
+  }
   //----------------------------------------------------------------------------
 
   Widget buildListView() {
@@ -146,6 +169,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(onPressed: addTodosToDatabase, icon: Icon(Icons.save)),
+          IconButton(
+              onPressed: getTodosFromDatabase, icon: Icon(Icons.download)),
+        ],
         title: Text('Todo Tasks'),
       ),
       body: Padding(
